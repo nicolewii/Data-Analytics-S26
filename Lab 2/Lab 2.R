@@ -57,13 +57,12 @@ ggplot(lmod2, aes(x = .fitted, y = .resid)) +
 
 ## Model 3 - PRICE vs. log10(PROPERTYSQFT),BED and BATH ##
 
-
 # linear fit & print
 lmod3 <- lm(log10(PRICE)~log10(PROPERTYSQFT) + BEDS + BATH, data = dataset)
 summary(lmod3)
 
 #Model 3: PLOT
-ggplot(dataset, aes(x = log10(PROPERTYSQFT), y = log10(PRICE))) +
+ggplot(dataset, aes(x = log10(PROPERTYSQFT) + BEDS + BATH, y = log10(PRICE))) +
   geom_point() +
   stat_smooth(method = "lm", col="violet") + 
   labs(title = "Model 3: Price vs. PropertySQFT, Bed, and Bath")
