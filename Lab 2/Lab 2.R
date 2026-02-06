@@ -55,20 +55,18 @@ ggplot(lmod2, aes(x = .fitted, y = .resid)) +
   geom_hline(yintercept = 0, color = "royalblue") +
   labs(title = "Model 2: Residual Plot", x = "Fitted", y = "Residual")
 
-## Model 3 - PRICE vs. BATH ##
+## Model 3 - PRICE vs. log10(PROPERTYSQFT),BED and BATH ##
 
-#clean the data set of baths
-dataset3 <- dataset[dataset$BATH <= 8,]
 
 # linear fit & print
-lmod3 <- lm(log10(PRICE)~BATH, data = dataset3)
+lmod3 <- lm(log10(PRICE)~log10(PROPERTYSQFT) + BEDS + BATH, data = dataset)
 summary(lmod3)
 
 #Model 3: PLOT
-ggplot(dataset3, aes(x = BATH, y = log10(PRICE))) +
+ggplot(dataset, aes(x = log10(PROPERTYSQFT), y = log10(PRICE))) +
   geom_point() +
   stat_smooth(method = "lm", col="violet") + 
-  labs(title = "Model 3: Price vs. Bath")
+  labs(title = "Model 3: Price vs. PropertySQFT, Bed, and Bath")
 
 #Model 3: RESIDUAL PLOT
 ggplot(lmod3, aes(x = .fitted, y = .resid)) +
