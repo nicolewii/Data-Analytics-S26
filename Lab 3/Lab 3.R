@@ -30,9 +30,9 @@ test <- abalone.sub[-train.indexes,]
 
 ##EXERCISE 1 - KNN MODELS##
 
-## MODEL 1 ~ length and height
+## MODEL 1: length and height
 features1 <- c("length", "height")
-## MODEL 2 ~ whole weight and shell weight
+## MODEL 2: whole weight and shell weight
 features2 <- c("whole_weight", "shell_weight")
 
 # Training and testing for model 1
