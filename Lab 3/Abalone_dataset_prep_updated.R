@@ -9,7 +9,7 @@ library(psych)
 
 
 ## read data
-abalone <- read.csv("~/Courses/Data Analytics/Fall24/labs/Lab02_2/abalone/abalone.data", header=FALSE)
+abalone <- read.csv("/Users/nicolelee/Documents/GitHub/Data-Analytics-S26/Lab 3/abalone.data", header=FALSE)
 
 ## rename columns
 colnames(abalone) <- c("sex", "length", 'diameter', 'height', 'whole_weight', 'shucked_wieght', 'viscera_wieght', 'shell_weight', 'rings' ) 
@@ -46,9 +46,10 @@ boxplot(X, main="abalone features")
 ## class label distributions
 plot(Y)
 
+plot_data <- data.frame(X, Class = Y)
+ggplot(plot_data, aes(x = diameter, y = length, color = Class)) + geom_point(alpha = 0.7) + stat_ellipse() + theme_minimal() + labs(title = "Features Ellipse Plot")
 
 ## feature-class plots
-featurePlot(x=X, y=Y, plot="ellipse")
 
 featurePlot(x=X, y=Y, plot="box")
 
