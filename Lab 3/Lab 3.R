@@ -30,10 +30,10 @@ test <- abalone.sub[-train.indexes,]
 
 ##EXERCISE 1 - KNN MODELS##
 
-## MODEL 1: length and height
-features1 <- c("length", "height")
-## MODEL 2: whole weight and shell weight
-features2 <- c("whole_weight", "shell_weight")
+## MODEL 1: all 4 weight features (best performing)
+features1 <- c("whole_weight", "shucked_wieght", "viscera_wieght", "shell_weight")
+## MODEL 2: all 3 dimension features
+features2 <- c("length", "diameter", "height")
 
 # Training and testing for model 1
 train1 <- train[, features1]
@@ -52,7 +52,7 @@ preproc1 <- preProcess(train1, method=c("center", "scale"))
 train1_norm <- predict(preproc1, train1)
 test1_norm <- predict(preproc1, test1)
 
-# Model 1 - K = 10, length and height
+# Model 1 - K = 10, all weight features
 m1_pred <- knn(train = train1_norm, test = test1_norm, cl = train_labels, k = 10)
 
 # Print table
@@ -61,14 +61,14 @@ print(m1_table)
 
 # Accuracy calculations
 m1_accuracy <- sum(diag(m1_table)) / sum(m1_table)
-cat("Model 1 Accuracy (length, height):", round(m1_accuracy * 100, 2), "%\n")
+cat("Model 1 Accuracy (all weights):", round(m1_accuracy * 100, 2), "%\n")
 
 # Normalize Model 2 features
 preproc2 <- preProcess(train2, method=c("center", "scale"))
 train2_norm <- predict(preproc2, train2)
 test2_norm <- predict(preproc2, test2)
 
-# Model 2 - K = 10, whole weight and shell weight
+# Model 2 - K = 10, all dimension features
 m2_pred <- knn(train = train2_norm, test = test2_norm, cl = train_labels, k = 10)
 
 # Table
@@ -77,19 +77,19 @@ print(m2_table)
 
 # Accuracy calculations
 m2_accuracy <- sum(diag(m2_table)) / sum(m2_table)
-cat("Model 2 Accuracy (whole_weight, shell_weight):", round(m2_accuracy * 100, 2), "%\n")
+cat("Model 2 Accuracy (all dimensions):", round(m2_accuracy * 100, 2), "%\n")
 
 # Comparing 
 if (m1_accuracy > m2_accuracy) {
   better_features <- train1_norm
   better_test_features <- test1_norm
   better_feature_names <- features1
-  cat("Better Model: Model 1 (length, height)\n")
+  cat("Better Model: Model 1 (weight features)\n")
 } else {
   better_features <- train2_norm
   better_test_features <- test2_norm
   better_feature_names <- features2
-  cat("Better Model: Model 2 (whole_weight, shell_weight)\n")
+  cat("Better Model: Model 2 (dimension features)\n")
 }
 
 # Find optimal k value in range of 1-100
