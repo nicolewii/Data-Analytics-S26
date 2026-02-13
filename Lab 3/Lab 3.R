@@ -28,67 +28,85 @@ train.indexes <- sample(4177,0.7*4177)
 train <- abalone.sub[train.indexes,]
 test <- abalone.sub[-train.indexes,]
 
-## separate x (features) & y (class labels)
-X_train <- train[,1:7] 
-Y_train <- train[,8]
-X_test <- test[,1:7]
-Y_test <- test[,8]
-
 ##EXERCISE 1 - KNN MODELS##
-#normalize data (using preProcess)
-preproc <- preProcess(X_train, method=c("center", "scale"))
-X_train_norm <- predict(preproc, X_train)
-X_test_norm <- predict(preproc, X_test)
 
-# Model 1 - K = 10, all features
-m1_pred <- knn(train = X_train_norm, test = X_test_norm, cl = Y_train, k = 10)
-#print table
-m1_table <- table(Predicted = m1_pred, Actual = Y_test)
+## MODEL 1 ~ length and height
+features1 <- c("length", "height")
+## MODEL 2 ~ whole weight and shell weight
+features2 <- c("whole_weight", "shell_weight")
+
+# Training and testing for model 1
+train1 <- train[, features1]
+test1  <- test[, features1]
+
+# Training and testing for model 2
+train2 <- train[, features2]
+test2  <- test[, features2]
+
+# Labels
+train_labels <- train$age.group
+test_labels  <- test$age.group
+
+# Normalize Model 1 features
+preproc1 <- preProcess(train1, method=c("center", "scale"))
+train1_norm <- predict(preproc1, train1)
+test1_norm <- predict(preproc1, test1)
+
+# Model 1 - K = 10, length and height
+m1_pred <- knn(train = train1_norm, test = test1_norm, cl = train_labels, k = 10)
+
+# Print table
+m1_table <- table(Predicted = m1_pred, Actual = test_labels)
 print(m1_table)
-#accuracy calculations
+
+# Accuracy calculations
 m1_accuracy <- sum(diag(m1_table)) / sum(m1_table)
-cat("Model 1 Accuracy (all features):", round(m1_accuracy * 100, 2), "%\n")
+cat("Model 1 Accuracy (length, height):", round(m1_accuracy * 100, 2), "%\n")
 
-# Model 2 - K = 10, subsets
-X_train_subset <- X_train_norm[, 4:7]
-X_test_subset <- X_test_norm[, 4:7]
+# Normalize Model 2 features
+preproc2 <- preProcess(train2, method=c("center", "scale"))
+train2_norm <- predict(preproc2, train2)
+test2_norm <- predict(preproc2, test2)
 
-m2_pred <- knn(train = X_train_subset, test = X_test_subset, cl = Y_train, k = 10)
+# Model 2 - K = 10, whole weight and shell weight
+m2_pred <- knn(train = train2_norm, test = test2_norm, cl = train_labels, k = 10)
 
-# table
-m2_table <- table(Predicted = m2_pred, Actual = Y_test)
+# Table
+m2_table <- table(Predicted = m2_pred, Actual = test_labels)
 print(m2_table)
 
-# accuracy calculations
+# Accuracy calculations
 m2_accuracy <- sum(diag(m2_table)) / sum(m2_table)
-cat("Model 2 Accuracy:", round(m2_accuracy * 100, 2), "%\n")
+cat("Model 2 Accuracy (whole_weight, shell_weight):", round(m2_accuracy * 100, 2), "%\n")
 
-#comparing 
+# Comparing 
 if (m1_accuracy > m2_accuracy) {
-  better_features <- X_train_norm
-  better_test_features <- X_test_norm
-  cat("Better Model: Model 1\n")
+  better_features <- train1_norm
+  better_test_features <- test1_norm
+  better_feature_names <- features1
+  cat("Better Model: Model 1 (length, height)\n")
 } else {
-  better_features <- X_train_subset
-  better_test_features <- X_test_subset
-  cat("Better Model: Model 2\n")
+  better_features <- train2_norm
+  better_test_features <- test2_norm
+  better_feature_names <- features2
+  cat("Better Model: Model 2 (whole_weight, shell_weight)\n")
 }
 
-#find optimal k value in range of 1-100
+# Find optimal k value in range of 1-100
 k_values <- 1:100
 accuracies <- numeric(100)
 
 for (i in 1:100) {
   pred <- knn(train = better_features,
               test = better_test_features,
-              cl = Y_train,
+              cl = train_labels,
               k = k_values[i])
   
-  o_table <- table(Predicted = pred, Actual = Y_test)
+  o_table <- table(Predicted = pred, Actual = test_labels)
   accuracies[i] <- sum(diag(o_table)) / sum(o_table)
 }
 
-# find optimal k
+# Find optimal k
 optimal_k <- k_values[which.max(accuracies)]
 optimal_accuracy <- max(accuracies)
 
@@ -97,13 +115,14 @@ cat("Optimal Accuracy:", round(optimal_accuracy * 100, 2), "%\n")
 
 ##EXERCISE 2 - CLUSTERING ##
 
-# determine optimal data set
+# Determine optimal data set based on better model
 if(m1_accuracy > m2_accuracy){
-  cluster_data <-abalone.sub[,1:7]
+  cluster_data <- abalone.sub[, features1]
 }else{
-  cluster_data <-abalone.sub[,4:7]
+  cluster_data <- abalone.sub[, features2]
 }
-#normalize
+
+# Normalize
 cluster_data_norm <- scale(cluster_data)
 
 
@@ -177,4 +196,3 @@ plot(k_range, kmeans_silhouettes, type="b", pch=19, col="darkgreen",
 plot(k_range, pam_silhouettes, type="b", pch=19, col="darkblue",
      xlab="k", ylab="Silhouette", main="PAM")
 par(mfrow=c(1,1))
-
