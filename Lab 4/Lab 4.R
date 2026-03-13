@@ -123,8 +123,8 @@ f1_B  <- mean(get_metrics(cm_B)$F1)
 print(cm_A) 
 print(cm_B)
 
-print(get_metrics(cm_A))
-print(get_metrics(cm_B))
+print(get_metrics(cm_A), row.names = FALSE)
+print(get_metrics(cm_B), row.names = FALSE)
 
-cat(sprintf("Model A — Accuracy: %.3f  Macro-F1: %.3f\n", acc_A, f1_A))
-cat(sprintf("Model B — Accuracy: %.3f  Macro-F1: %.3f\n", acc_B, f1_B))
+cat(sprintf("Model A — Accuracy: %.2f%%  Macro-F1: %.3f\n", acc_A*100, f1_A))
+cat(sprintf("Model B — Accuracy: %.2f%%  Macro-F1: %.3f\n", acc_B*100, f1_B))
