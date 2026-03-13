@@ -12,7 +12,7 @@ library(psych)
 library(readr)
 
 ## set working directory so that files can be referenced without the full path
-setwd("~/Courses/Data Analytics/Fall25/labs/lab 4/")
+setwd("~/Documents/GitHub/Data-Analytics-S26/Lab 4")
 
 ## read dataset
 wine <- read_csv("wine.data", col_names = FALSE)

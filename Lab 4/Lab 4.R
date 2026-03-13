@@ -1,0 +1,130 @@
+##########################################
+### Principal Component Analysis (PCA) ###
+##########################################
+
+library(ggplot2)
+library(ggfortify)
+library(GGally)
+library(e1071)
+library(class)
+library(psych)
+library(readr)
+
+setwd("~/Documents/GitHub/Data-Analytics-S26/Lab 4")
+
+wine <- read_csv("wine.data", col_names = FALSE)
+
+names(wine) <- c("Type","Alcohol","Malic acid","Ash","Alcalinity of ash",
+                 "Magnesium","Total phenols","Flavanoids","Nonflavanoid Phenols",
+                 "Proanthocyanins","Color Intensity","Hue",
+                 "Od280/od315 of diluted wines","Proline")
+
+wine$Type <- as.factor(wine$Type)
+
+X <- wine[, -1]
+Y <- wine$Type
+
+# Train/test the split
+set.seed(42)
+n   <- nrow(wine)
+idx <- sample(seq_len(n), size = floor(0.70 * n))
+train   <- wine[idx,  ]
+test    <- wine[-idx, ]
+train_Y <- train$Type
+test_Y  <- test$Type
+k_val   <- round(sqrt(nrow(train)))
+
+# Generate PCA
+wine_pca <- princomp(X, cor = TRUE)
+summary(wine_pca)
+
+
+# Plotting PC1 vs PC2
+scores_df <- as.data.frame(wine_pca$scores)
+scores_df$Type <- Y
+
+# calculating possible variance
+vars <- (wine_pca$sdev^2 / sum(wine_pca$sdev^2)) * 100
+
+# plotting PC1 and PC2 (with their % variance)
+ggplot(scores_df, aes(x = Comp.1, y = Comp.2, colour = Type, shape = Type)) +
+  geom_point(size = 2.5) +
+  labs(title = "PC1 vs PC2",
+       x = paste0("PC1 (", round(vars[1], 1), "% variance)"),
+       y = paste0("PC2 (", round(vars[2], 1), "% variance)")) +
+  theme_bw()
+
+# Load PC1
+pc1_load   <- wine_pca$loadings[, 1]
+pc1_ranked <- sort(abs(pc1_load), decreasing = TRUE)
+print(round(pc1_ranked, 4))
+
+# Bar plot to show the loading ranked
+barplot(pc1_ranked, las = 2,
+        main = "Absolute Loadings on PC1",
+        ylab = "|Loading|",
+        col  = "darkturquoise")
+
+
+# Model A: kNN on top 4 variables
+top4 <- c("Flavanoids", "Total phenols", "Od280/od315 of diluted wines", "Proanthocyanins")
+
+train_A_scaled <- scale(train[, top4])
+test_A_scaled  <- scale(test[, top4],
+                        center = attr(train_A_scaled, "scaled:center"),
+                        scale  = attr(train_A_scaled, "scaled:scale"))
+
+pred_A <- knn(train = train_A_scaled,
+              test  = test_A_scaled,
+              cl    = train_Y,
+              k     = k_val)
+
+# Model B: kNN on first 2 PC scores
+pca_train <- princomp(train[, -1], cor = TRUE)
+
+train_B <- as.data.frame(pca_train$scores[, 1:2])
+names(train_B) <- c("PC1", "PC2")
+
+test_scaled <- scale(test[, -1],
+                     center = pca_train$center,
+                     scale  = pca_train$scale)
+test_B <- as.data.frame(test_scaled %*% pca_train$loadings[, 1:2])
+names(test_B) <- c("PC1", "PC2")
+
+pred_B <- knn(train = train_B,
+              test  = test_B,
+              cl    = train_Y,
+              k     = k_val)
+
+# Function to get metrics for precision, recall, and f1
+get_metrics <- function(cm) {
+  classes <- rownames(cm)
+  results <- lapply(classes, function(cls) {
+    TP <- cm[cls, cls]
+    FP <- sum(cm[, cls]) - TP
+    FN <- sum(cm[cls, ]) - TP
+    precision <- TP / (TP + FP)
+    recall    <- TP / (TP + FN)
+    f1        <- 2 * precision * recall / (precision + recall)
+    data.frame(Class=cls, Precision=round(precision,3),
+               Recall=round(recall,3), F1=round(f1,3))
+  })
+  do.call(rbind, results)
+}
+
+# Compare models for precision, recall and F1
+cm_A <- table(Actual = test_Y, Predicted = pred_A)
+cm_B <- table(Actual = test_Y, Predicted = pred_B)
+acc_A <- sum(diag(cm_A)) / sum(cm_A)
+acc_B <- sum(diag(cm_B)) / sum(cm_B)
+f1_A  <- mean(get_metrics(cm_A)$F1)
+f1_B  <- mean(get_metrics(cm_B)$F1)
+
+print(cm_A) 
+print(cm_B)
+
+print(get_metrics(cm_A))
+print(get_metrics(cm_B))
+
+cat(sprintf("Model A — Accuracy: %.3f  Macro-F1: %.3f\n", acc_A, f1_A))
+cat(sprintf("Model B — Accuracy: %.3f  Macro-F1: %.3f\n", acc_B, f1_B))
